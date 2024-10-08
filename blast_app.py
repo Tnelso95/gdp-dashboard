@@ -112,7 +112,7 @@ def calculate_attack_angle_trajectory(angle, distance):
 
     return x_values_attack, y_values_attack, final_height
 
-def calculate_launch_angle(attack_angle, approach_angle=-6):
+def calculate_launch_angle(attack_angle, approach_angle=-5):
     launch_angle = attack_angle - approach_angle
     return launch_angle
 
