@@ -1,5 +1,39 @@
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
+
+# Function to calculate height based on attack angle
+def calculate_attack_angle_trajectory(angle, distance):
+    # Convert angle to radians
+    slope_rad = np.radians(angle)
+
+    # Initial x position and final crossing point
+    x_initial = -1
+    x_final = 0
+    y_final = 2.6
+    
+    # Calculate the initial height using the attack angle
+    initial_height = y_final - np.tan(slope_rad) * (x_final - x_initial)
+
+    # Calculate the endpoint height based on the attack angle
+    final_height = 2.6 + np.tan(slope_rad) * distance
+
+    # Time of flight (arbitrary choice, can be adjusted)
+    time_of_flight = 1.5  # seconds
+    v_x_attack = distance / time_of_flight
+
+    # Create time values for the trajectory of the attack angle
+    t_values_attack = np.linspace(0, time_of_flight, num=100)
+
+    # Calculate the trajectory based on attack angle
+    y_values_attack = np.interp(t_values_attack, [0, time_of_flight], 
+                                 [initial_height, final_height])
+    x_values_attack = v_x_attack * t_values_attack
+
+    # Shift attack angle trajectory to start at x = -1
+    x_values_attack = x_values_attack - x_values_attack[0] - 1
+
+    return x_values_attack, y_values_attack, final_height
 
 # Function to calculate Swing Length
 def calc_swing_length(time_to_contact, bat_speed):
@@ -77,7 +111,6 @@ category_info = {
                        "This group generally struggles, with a low bat speed and not getting to that bat speed quickly. The hitters who find success are doing so through a contact-oriented approach with the margin for error being razor thin.",
         "metrics": "wOBA: .273, Whiff Pct: 19.75, Barrel Pct: 3.43, Batting Avg: .222, ISO: .093"
     }
-    
 }
 
 # Streamlit app code
@@ -100,7 +133,26 @@ st.write(f"Attack Angle: {attack_angle}")
 st.write(f"Time to Contact: {time_to_contact}")
 st.write(f"Swing Length: {swing_length:.2f}")
 st.write(f"Swing Acceleration: {swing_acceleration:.2f}")
-st.write(f"Swing Score (20 - 80) : {swing_score:.2f}")
+st.write(f"Swing Score: {swing_score:.2f}")
 st.write(f"Color Category: {color_category}")
-st.write(f"Description: {category_info[color_category]['description']}")
+st.write(f"Category Info: {category_info[color_category]['description']}")
 st.write(f"Expected Metrics: {category_info[color_category]['metrics']}")
+
+# Trajectory visualization
+st.subheader('Attack Angle Trajectory Visualization')
+distance = st.number_input('Enter Distance for Trajectory (e.g., 5):', value=5.0)
+
+x_values_attack, y_values_attack, final_height = calculate_attack_angle_trajectory(attack_angle, distance)
+
+# Plotting
+fig, ax = plt.subplots()
+ax.plot(x_values_attack, y_values_attack, label=f'Trajectory at {attack_angle}°')
+ax.axhline(y=2.6, color='r', linestyle='--', label='Plate Height (2.6 m)')
+ax.set_xlabel('Distance (m)')
+ax.set_ylabel('Height (m)')
+ax.set_title('Attack Angle Trajectory')
+ax.legend()
+ax.grid()
+
+# Show plot in Streamlit
+st.pyplot(fig)
