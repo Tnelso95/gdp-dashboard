@@ -113,7 +113,7 @@ def calculate_attack_angle_trajectory(angle, distance):
     return x_values_attack, y_values_attack, final_height
 
 def calculate_launch_angle(attack_angle, approach_angle=-5):
-    launch_angle = attack_angle - approach_angle
+    launch_angle = round(attack_angle - approach_angle, 2)
     return launch_angle
 
 # Streamlit app code
