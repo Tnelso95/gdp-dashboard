@@ -103,4 +103,4 @@ st.write(f"Swing Acceleration: {swing_acceleration:.2f}")
 st.write(f"Swing Score: {swing_score:.2f}")
 st.write(f"Color Category: {color_category}")
 st.write(f"Description: {category_info[color_category]['description']}")
-st.write(f"Expected Metrics: {category_info[color_category]['met
+st.write(f"Expected Metrics: {category_info[color_category]['metrics']}"
