@@ -144,7 +144,3 @@ st.write(f"**Color Category:** {color_category}")
 # Display the category information
 st.write(f"**Category Information:** {category_info[color_category]['description']}")
 st.write(f"**Metrics:** {category_info[color_category]['metrics']}")
-    plt.legend()
-    
-    # Display the plot in Streamlit
-    st.pyplot(plt)
