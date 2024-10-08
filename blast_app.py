@@ -4,55 +4,37 @@ import matplotlib.pyplot as plt
 
 # Function to calculate height based on attack angle
 def calculate_attack_angle_trajectory(angle, distance):
-    # Convert angle to radians
     slope_rad = np.radians(angle)
-
-    # Initial x position and final crossing point
     x_initial = -1
     x_final = 0
     y_final = 2.6
     
-    # Calculate the initial height using the attack angle
     initial_height = y_final - np.tan(slope_rad) * (x_final - x_initial)
-
-    # Calculate the endpoint height based on the attack angle
     final_height = 2.6 + np.tan(slope_rad) * distance
-
-    # Time of flight (arbitrary choice, can be adjusted)
     time_of_flight = 1.5  # seconds
     v_x_attack = distance / time_of_flight
 
-    # Create time values for the trajectory of the attack angle
     t_values_attack = np.linspace(0, time_of_flight, num=100)
-
-    # Calculate the trajectory based on attack angle
-    y_values_attack = np.interp(t_values_attack, [0, time_of_flight], 
-                                 [initial_height, final_height])
+    y_values_attack = np.interp(t_values_attack, [0, time_of_flight], [initial_height, final_height])
     x_values_attack = v_x_attack * t_values_attack
 
-    # Shift attack angle trajectory to start at x = -1
     x_values_attack = x_values_attack - x_values_attack[0] - 1
 
     return x_values_attack, y_values_attack, final_height
 
-# Function to calculate Swing Length
 def calc_swing_length(time_to_contact, bat_speed):
     return (time_to_contact / 1.3636) * bat_speed
 
-# Function to calculate Swing Acceleration
 def calc_swing_acceleration(bat_speed, swing_length):
     return 0.03343 * (bat_speed ** 2 / swing_length)
 
-# Function to calculate Swing Score
 def calc_swing_score(swing_acceleration, min_swing_acc=15, max_swing_acc=30):
     score = 20 + ((swing_acceleration - min_swing_acc) / (max_swing_acc - min_swing_acc)) * 60
-    return max(min(score, 80), 20)  # Ensure score is within the 20-80 range
+    return max(min(score, 80), 20)
 
-# Function to calculate Euclidean distance
 def euclidean_distance(x1, y1, z1, x2, y2, z2):
     return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
 
-# Function to assign color category based on input values and cluster centroids
 def assign_color_category(bat_speed, swing_acceleration, attack_angle):
     clusters = {
         "Orange": [73.3, 24.03, 8.84],
@@ -69,46 +51,38 @@ def assign_color_category(bat_speed, swing_acceleration, attack_angle):
                  for color, coords in clusters.items()}
     return min(distances, key=distances.get)
 
-# Define descriptions and expected metrics for each category
+# Descriptions and metrics for each category
 category_info = {
     "Orange": {
-        "description": "Aaron Judge, Shohei Ohtani, Yordan Alvarez.\n"
-                       "Very efficient to the ball and finds success in utilizing the high bat speed to hit pitches out in front for power. This group may be plagued by a high whiff rate.",
+        "description": "Aaron Judge, Shohei Ohtani, Yordan Alvarez.\nVery efficient to the ball and finds success in utilizing the high bat speed to hit pitches out in front for power. This group may be plagued by a high whiff rate.",
         "metrics": "wOBA: .323, Whiff Pct: 25.9, Barrel Pct: 11.51, Batting Avg: .245, ISO: .185"
     },
     "Purple": {
-        "description": "Juan Soto, Bobby Witt Jr., Gunnar Henderson.\n"
-                       "This group is the most efficient to the ball and is full of complete hitters that can hit for average and power. Hitters in this group who struggle likely are finding their efficiency by hitting balls too deep.",
+        "description": "Juan Soto, Bobby Witt Jr., Gunnar Henderson.\nThis group is the most efficient to the ball and is full of complete hitters that can hit for average and power. Hitters in this group who struggle likely are finding their efficiency by hitting balls too deep.",
         "metrics": "wOBA: .318, Whiff Pct: 23.22, Barrel Pct: 9.37, Batting Avg: .245, ISO: .168"
     },
     "Red": {
-        "description": "Trea Turner, Jesse Winker, Patrick Wisdom.\n"
-                       "This cluster consists of slightly longer than average swings that take longer than average from start to impact, but generally benefit from hitting the ball in front of the plate. These longer swings may result in too many whiffs.",
+        "description": "Trea Turner, Jesse Winker, Patrick Wisdom.\nThis cluster consists of slightly longer than average swings that take longer than average from start to impact, but generally benefit from hitting the ball in front of the plate. These longer swings may result in too many whiffs.",
         "metrics": "wOBA: .312, Whiff Pct: 24.65, Barrel Pct: 9.22, Batting Avg: .241, ISO: .172"
     },
     "Grey": {
-        "description": "Max Muncy, Christian Encarnacion-Strand, Brandon Lowe.\n"
-                       "Relatively normal swings in the context of bat speed and swing length, but follow a very uppercut path. These swings find production through power, while hitting for a low average and whiffing often.",
+        "description": "Max Muncy, Christian Encarnacion-Strand, Brandon Lowe.\nRelatively normal swings in the context of bat speed and swing length, but follow a very uppercut path. These swings find production through power, while hitting for a low average and whiffing often.",
         "metrics": "wOBA: .300, Whiff Pct: 28.06, Barrel Pct: 10.16, Batting Avg: .216, ISO: .171"
     },
     "Green": {
-        "description": "Steven Kwan, Mookie Betts, Josh Smith.\n"
-                       "This group consists of slow to average bat speeds but all very efficient swings. They find success in strong utilization of bat to ball skills and may struggle with too steep of an attack angle.",
+        "description": "Steven Kwan, Mookie Betts, Josh Smith.\nThis group consists of slow to average bat speeds but all very efficient swings. They find success in strong utilization of bat to ball skills and may struggle with too steep of an attack angle.",
         "metrics": "wOBA: .298, Whiff Pct: 18.45, Barrel Pct: 4.81, Batting Avg: .242, ISO: .111"
     },
     "Pink": {
-        "description": "Jose Altuve, Cody Bellinger, Marcus Semien.\n"
-                       "This group has high variance with its best hitters finding success by elevating the ball to the pull side, thanks to a point of contact well in front of the plate. The hitters who struggle in this group are due to their high swing length being a product of a truly long swing, not a point of contact that results in pulled fly balls.",
+        "description": "Jose Altuve, Cody Bellinger, Marcus Semien.\nThis group has high variance with its best hitters finding success by elevating the ball to the pull side, thanks to a point of contact well in front of the plate. The hitters who struggle in this group are due to their high swing length being a product of a truly long swing, not a point of contact that results in pulled fly balls.",
         "metrics": "wOBA: .293, Whiff Pct: 24.27, Barrel Pct: 7.92, Batting Avg: .221, ISO: .150"
     },
     "Brown": {
-        "description": "Brenton Doyle, Yandy Diaz, Kevin Kiermaier.\n"
-                       "Slightly slower swings with a very flat attack angle. If these swings are successful it’s likely because of a strong contact-oriented approach. They don’t whiff much but may struggle to hit for power.",
+        "description": "Brenton Doyle, Yandy Diaz, Kevin Kiermaier.\nSlightly slower swings with a very flat attack angle. If these swings are successful it’s likely because of a strong contact-oriented approach. They don’t whiff much but may struggle to hit for power.",
         "metrics": "wOBA: .284, Whiff Pct: 20.49, Barrel Pct: 5.10, Batting Avg: .235, ISO: .113"
     },
     "Blue": {
-        "description": "Charlie Blackmon, Cavan Biggio, Nicky Lopez.\n"
-                       "This group generally struggles, with a low bat speed and not getting to that bat speed quickly. The hitters who find success are doing so through a contact-oriented approach with the margin for error being razor thin.",
+        "description": "Charlie Blackmon, Cavan Biggio, Nicky Lopez.\nThis group generally struggles, with a low bat speed and not getting to that bat speed quickly. The hitters who find success are doing so through a contact-oriented approach with the margin for error being razor thin.",
         "metrics": "wOBA: .273, Whiff Pct: 19.75, Barrel Pct: 3.43, Batting Avg: .222, ISO: .093"
     }
 }
@@ -121,37 +95,37 @@ bat_speed = st.slider('Bat Speed:', 50.0, 90.0, 65.0)
 attack_angle = st.slider('Attack Angle:', -5.0, 25.0, 0.0)
 time_to_contact = st.slider('Time to Contact:', 0.1, 0.2, 0.15)
 
-# Calculate swing length, acceleration, score, and color category
+# Calculate swing metrics
 swing_length = calc_swing_length(time_to_contact, bat_speed)
 swing_acceleration = calc_swing_acceleration(bat_speed, swing_length)
 swing_score = calc_swing_score(swing_acceleration)
 color_category = assign_color_category(bat_speed, swing_acceleration, attack_angle)
 
-# Display the results
-st.write(f"Bat Speed: {bat_speed}")
-st.write(f"Attack Angle: {attack_angle}")
-st.write(f"Time to Contact: {time_to_contact}")
-st.write(f"Swing Length: {swing_length:.2f}")
-st.write(f"Swing Acceleration: {swing_acceleration:.2f}")
-st.write(f"Swing Score: {swing_score:.2f}")
-st.write(f"Color Category: {color_category}")
-st.write(f"Category Info: {category_info[color_category]['description']}")
-st.write(f"Expected Metrics: {category_info[color_category]['metrics']}")
+# Output results
+st.write(f'Swing Length: {swing_length:.2f}')
+st.write(f'Swing Acceleration: {swing_acceleration:.2f}')
+st.write(f'Swing Score: {swing_score:.2f}')
+st.write(f'Color Category: {color_category}')
 
-# Trajectory visualization
-st.subheader('Attack Angle Trajectory Visualization')
-distance = st.number_input('Enter Distance for Trajectory (e.g., 5):', value=5.0)
+# Display category information
+st.subheader('Category Information')
+if color_category in category_info:
+    st.write(category_info[color_category]["description"])
+    st.write(f'Metrics: {category_info[color_category]["metrics"]}')
 
-x_values_attack, y_values_attack, final_height = calculate_attack_angle_trajectory(attack_angle, distance)
+# Plot trajectory
+distance = 10  # set your distance here
+x_attack, y_attack, final_height = calculate_attack_angle_trajectory(attack_angle, distance)
 
-# Plotting
-fig, ax = plt.subplots()
-ax.plot(x_values_attack, y_values_attack, label=f'Trajectory at {attack_angle}°')
-ax.axhline(y=2.6, color='r', linestyle='--', label='Plate Height (2.6 m)')
-ax.set_xlabel('Distance (m)')
-ax.set_ylabel('Height (m)')
-ax.set_title('Attack Angle Trajectory')
-ax.legend()
+plt.figure(figsize=(8, 4))
+plt.plot(x_attack, y_attack, label='Trajectory', color='blue')
+plt.axhline(y=2.6, color='red', linestyle='--', label='Plate Height (2.6 ft)')
+plt.xlabel('Distance (ft)')
+plt.ylabel('Height (ft)')
+plt.title('Attack Angle Trajectory')
+plt.legend()
+st.pyplot(plt)
+
 ax.grid()
 
 # Show plot in Streamlit
