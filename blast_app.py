@@ -38,46 +38,46 @@ def assign_color_category(bat_speed, swing_acceleration, attack_angle):
 # Define descriptions and expected metrics for each category
 category_info = {
     "Orange": {
-        "description": "Aaron Judge, Shohei Ohtani, Yordan Alvarez\n"
+        "description": "Aaron Judge, Shohei Ohtani, Yordan Alvarez.\n"
                        "Very efficient to the ball and finds success in utilizing the high bat speed to hit pitches out in front for power. This group may be plagued by a high whiff rate.",
         "metrics": "wOBA: .323, Whiff Pct: 25.9, Barrel Pct: 11.51, Batting Avg: .245, ISO: .185"
     },
     "Purple": {
-        "description": "Juan Soto, Bobby Witt Jr., Gunnar Henderson\n"
+        "description": "Juan Soto, Bobby Witt Jr., Gunnar Henderson.\n"
                        "This group is the most efficient to the ball and is full of complete hitters that can hit for average and power. Hitters in this group who struggle likely are finding their efficiency by hitting balls too deep.",
         "metrics": "wOBA: .318, Whiff Pct: 23.22, Barrel Pct: 9.37, Batting Avg: .245, ISO: .168"
     },
     "Red": {
-        "description": "Trea Turner, Jesse Winker, Patrick Wisdom\n"
+        "description": "Trea Turner, Jesse Winker, Patrick Wisdom.\n"
                        "This cluster consists of slightly longer than average swings that take longer than average from start to impact, but generally benefit from hitting the ball in front of the plate. These longer swings may result in too many whiffs.",
         "metrics": "wOBA: .312, Whiff Pct: 24.65, Barrel Pct: 9.22, Batting Avg: .241, ISO: .172"
     },
     "Grey": {
-        "description": "Max Muncy, Christian Encarnacion-Strand, Brandon Lowe\n"
+        "description": "Max Muncy, Christian Encarnacion-Strand, Brandon Lowe.\n"
                        "Relatively normal swings in the context of bat speed and swing length, but follow a very uppercut path. These swings find production through power, while hitting for a low average and whiffing often.",
         "metrics": "wOBA: .300, Whiff Pct: 28.06, Barrel Pct: 10.16, Batting Avg: .216, ISO: .171"
     },
     "Green": {
-        "description": "Steven Kwan, Mookie Betts, Josh Smith\n"
+        "description": "Steven Kwan, Mookie Betts, Josh Smith.\n"
                        "This group consists of slow to average bat speeds but all very efficient swings. They find success in strong utilization of bat to ball skills and may struggle with too steep of an attack angle.",
         "metrics": "wOBA: .298, Whiff Pct: 18.45, Barrel Pct: 4.81, Batting Avg: .242, ISO: .111"
     },
     "Pink": {
-        "description": "Jose Altuve, Cody Bellinger, Marcus Semien\n"
+        "description": "Jose Altuve, Cody Bellinger, Marcus Semien.\n"
                        "This group has high variance with its best hitters finding success by elevating the ball to the pull side, thanks to a point of contact well in front of the plate. The hitters who struggle in this group are due to their high swing length being a product of a truly long swing, not a point of contact that results in pulled fly balls.",
         "metrics": "wOBA: .293, Whiff Pct: 24.27, Barrel Pct: 7.92, Batting Avg: .221, ISO: .150"
     },
     "Brown": {
-        "description": "Brenton Doyle, Yandy Diaz, Kevin Kiermaier\n"
+        "description": "Brenton Doyle, Yandy Diaz, Kevin Kiermaier.\n"
                        "Slightly slower swings with a very flat attack angle. If these swings are successful it’s likely because of a strong contact-oriented approach. They don’t whiff much but may struggle to hit for power.",
         "metrics": "wOBA: .284, Whiff Pct: 20.49, Barrel Pct: 5.10, Batting Avg: .235, ISO: .113"
     },
     "Blue": {
-        "description": "Charlie Blackmon, Cavan Biggio, Nicky Lopez\n"
+        "description": "Charlie Blackmon, Cavan Biggio, Nicky Lopez.\n"
                        "This group generally struggles, with a low bat speed and not getting to that bat speed quickly. The hitters who find success are doing so through a contact-oriented approach with the margin for error being razor thin.",
         "metrics": "wOBA: .273, Whiff Pct: 19.75, Barrel Pct: 3.43, Batting Avg: .222, ISO: .093"
     }
-    # Add other categories here...
+    
 }
 
 # Streamlit app code
