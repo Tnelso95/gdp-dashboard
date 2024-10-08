@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Function to calculate Swing Length
 def calc_swing_length(time_to_contact, bat_speed):
@@ -145,59 +144,6 @@ st.write(f"**Color Category:** {color_category}")
 # Display the category information
 st.write(f"**Category Information:** {category_info[color_category]['description']}")
 st.write(f"**Metrics:** {category_info[color_category]['metrics']}")
-
-if st.button('Plot Trajectory'):
-    # Constants
-    distance = 55  # Horizontal distance in feet
-
-    # Define fastball and breaking ball angles
-    fastball_angle_min = 4  # degrees
-    fastball_angle_max = 7  # degrees
-    breaking_ball_angle_min = 7.1  # degrees
-    breaking_ball_angle_max = 16  # degrees
-
-    # Calculate initial point
-    initial_x = 0
-    initial_y = 2.6
-
-    # Calculate heights for fastball lines
-    fastball_min_height = initial_y + np.tan(np.radians(fastball_angle_min)) * distance
-    fastball_max_height = initial_y + np.tan(np.radians(fastball_angle_max)) * distance
-
-    # Calculate heights for breaking ball lines
-    breaking_ball_min_height = initial_y + np.tan(np.radians(breaking_ball_angle_min)) * distance
-    breaking_ball_max_height = initial_y + np.tan(np.radians(breaking_ball_angle_max)) * distance
-
-    # Calculate attack angle trajectory
-    x_values_attack, y_values_attack, final_height_attack = calculate_attack_angle_trajectory(attack_angle, distance)
-
-    # Plotting the trajectories
-    plt.figure(figsize=(10, 5))
-
-    # Fastball lines
-    plt.plot([initial_x, distance], [initial_y, fastball_min_height], color='blue', linewidth=2, linestyle='--', label='Fastball Min Trajectory')
-    plt.plot([initial_x, distance], [initial_y, fastball_max_height], color='blue', linewidth=2, linestyle='--', label='Fastball Max Trajectory')
-
-    # Breaking ball lines
-    plt.plot([initial_x, distance], [initial_y, breaking_ball_min_height], color='orange', linewidth=2, linestyle='--', label='Breaking Ball Min Trajectory')
-    plt.plot([initial_x, distance], [initial_y, breaking_ball_max_height], color='orange', linewidth=2, linestyle='--', label='Breaking Ball Max Trajectory')
-
-    # Attack angle trajectory
-    plt.plot(x_values_attack, y_values_attack, label=f'Attack Angle Trajectory ({attack_angle}°)', color='green', linewidth=2)
-
-    # Mark the end points
-    plt.scatter([0, 55], [2.6, fastball_max_height], color='red', zorder=5)  # Fastball endpoints
-    plt.scatter(55, breaking_ball_max_height, color='red', zorder=5)  # Breaking ball endpoint
-    plt.scatter(55, final_height_attack, color='red', zorder=5)  # Attack angle endpoint
-
-    plt.title('Baseball Throw Trajectories')
-    plt.xlabel('Horizontal Distance (feet)')
-    plt.ylabel('Height (feet)')
-    plt.axhline(0, color='black', lw=0.5, ls='--')  # Ground line
-    plt.axvline(0, color='black', lw=0.5, ls='--')  # Vertical line at start
-    plt.xlim(-2, 60)  # Adjust x-axis limits to show the starting point and end point
-    plt.ylim(2, 10)  # Adjust vertical limits
-    plt.grid()
     plt.legend()
     
     # Display the plot in Streamlit
