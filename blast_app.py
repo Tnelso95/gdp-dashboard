@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Function to calculate Swing Length
 def calc_swing_length(time_to_contact, bat_speed):
@@ -77,13 +78,49 @@ category_info = {
                        "This group generally struggles, with a low bat speed and not getting to that bat speed quickly. The hitters who find success are doing so through a contact-oriented approach with the margin for error being razor thin.",
         "metrics": "wOBA: .273, Whiff Pct: 19.75, Barrel Pct: 3.43, Batting Avg: .222, ISO: .093"
     }
-    
 }
 
-# Streamlit app code
-st.title('Swing Metrics Calculator')
+# Function to calculate height based on attack angle
+def calculate_attack_angle_trajectory(angle, distance):
+    # Convert angle to radians
+    slope_rad = np.radians(angle)
 
-# Input sliders
+    # Initial x position and final crossing point
+    x_initial = -1
+    x_final = 0
+    y_final = 2.6
+    
+    # Calculate the initial height using the attack angle
+    initial_height = y_final - np.tan(slope_rad) * (x_final - x_initial)
+
+    # Calculate the endpoint height based on the attack angle
+    final_height = 2.6 + np.tan(slope_rad) * distance
+
+    # Time of flight (arbitrary choice, can be adjusted)
+    time_of_flight = 1.5  # seconds
+    v_x_attack = distance / time_of_flight
+
+    # Create time values for the trajectory of the attack angle
+    t_values_attack = np.linspace(0, time_of_flight, num=100)
+
+    # Calculate the trajectory based on attack angle
+    y_values_attack = np.interp(t_values_attack, [0, time_of_flight], 
+                                 [initial_height, final_height])
+    x_values_attack = v_x_attack * t_values_attack
+
+    # Shift attack angle trajectory to start at x = -1
+    x_values_attack = x_values_attack - x_values_attack[0] - 1
+
+    return x_values_attack, y_values_attack, final_height
+
+def calculate_launch_angle(attack_angle, approach_angle=-6):
+    launch_angle = attack_angle - approach_angle
+    return launch_angle
+
+# Streamlit app code
+st.title('Swing Metrics and Trajectory Calculator')
+
+# Input sliders for swing metrics
 bat_speed = st.slider('Bat Speed:', 50.0, 90.0, 65.0)
 attack_angle = st.slider('Attack Angle:', -5.0, 25.0, 0.0)
 time_to_contact = st.slider('Time to Contact:', 0.1, 0.2, 0.15)
@@ -93,14 +130,75 @@ swing_length = calc_swing_length(time_to_contact, bat_speed)
 swing_acceleration = calc_swing_acceleration(bat_speed, swing_length)
 swing_score = calc_swing_score(swing_acceleration)
 color_category = assign_color_category(bat_speed, swing_acceleration, attack_angle)
+launch_angle = calculate_launch_angle(attack_angle)
 
 # Display the results
-st.write(f"Bat Speed: {bat_speed}")
-st.write(f"Attack Angle: {attack_angle}")
-st.write(f"Time to Contact: {time_to_contact}")
-st.write(f"Swing Length: {swing_length:.2f}")
-st.write(f"Swing Acceleration: {swing_acceleration:.2f}")
-st.write(f"Swing Score: {swing_score:.2f}")
-st.write(f"Color Category: {color_category}")
-st.write(f"Description: {category_info[color_category]['description']}")
-st.write(f"Expected Metrics: {category_info[color_category]['metrics']}")
+st.write(f"**Bat Speed:** {bat_speed} mph")
+st.write(f"**Attack Angle:** {attack_angle} degrees")
+st.write(f"**Time to Contact:** {time_to_contact} seconds")
+st.write(f"**Swing Length:** {swing_length:.2f} inches")
+st.write(f"**Swing Acceleration:** {swing_acceleration:.2f} g")
+st.write(f"**Expected Launch Angle:** {launch_angle} degrees")
+st.write(f"**Swing Score:** {swing_score:.2f}")
+st.write(f"**Color Category:** {color_category}")
+
+# Display the category information
+st.write(f"**Category Information:** {category_info[color_category]['description']}")
+st.write(f"**Metrics:** {category_info[color_category]['metrics']}")
+
+if st.button('Plot Trajectory'):
+    # Constants
+    distance = 55  # Horizontal distance in feet
+
+    # Define fastball and breaking ball angles
+    fastball_angle_min = 4  # degrees
+    fastball_angle_max = 7  # degrees
+    breaking_ball_angle_min = 7.1  # degrees
+    breaking_ball_angle_max = 16  # degrees
+
+    # Calculate initial point
+    initial_x = 0
+    initial_y = 2.6
+
+    # Calculate heights for fastball lines
+    fastball_min_height = initial_y + np.tan(np.radians(fastball_angle_min)) * distance
+    fastball_max_height = initial_y + np.tan(np.radians(fastball_angle_max)) * distance
+
+    # Calculate heights for breaking ball lines
+    breaking_ball_min_height = initial_y + np.tan(np.radians(breaking_ball_angle_min)) * distance
+    breaking_ball_max_height = initial_y + np.tan(np.radians(breaking_ball_angle_max)) * distance
+
+    # Calculate attack angle trajectory
+    x_values_attack, y_values_attack, final_height_attack = calculate_attack_angle_trajectory(attack_angle, distance)
+
+    # Plotting the trajectories
+    plt.figure(figsize=(10, 5))
+
+    # Fastball lines
+    plt.plot([initial_x, distance], [initial_y, fastball_min_height], color='blue', linewidth=2, linestyle='--', label='Fastball Min Trajectory')
+    plt.plot([initial_x, distance], [initial_y, fastball_max_height], color='blue', linewidth=2, linestyle='--', label='Fastball Max Trajectory')
+
+    # Breaking ball lines
+    plt.plot([initial_x, distance], [initial_y, breaking_ball_min_height], color='orange', linewidth=2, linestyle='--', label='Breaking Ball Min Trajectory')
+    plt.plot([initial_x, distance], [initial_y, breaking_ball_max_height], color='orange', linewidth=2, linestyle='--', label='Breaking Ball Max Trajectory')
+
+    # Attack angle trajectory
+    plt.plot(x_values_attack, y_values_attack, label=f'Attack Angle Trajectory ({attack_angle}°)', color='green', linewidth=2)
+
+    # Mark the end points
+    plt.scatter([0, 55], [2.6, fastball_max_height], color='red', zorder=5)  # Fastball endpoints
+    plt.scatter(55, breaking_ball_max_height, color='red', zorder=5)  # Breaking ball endpoint
+    plt.scatter(55, final_height_attack, color='red', zorder=5)  # Attack angle endpoint
+
+    plt.title('Baseball Throw Trajectories')
+    plt.xlabel('Horizontal Distance (feet)')
+    plt.ylabel('Height (feet)')
+    plt.axhline(0, color='black', lw=0.5, ls='--')  # Ground line
+    plt.axvline(0, color='black', lw=0.5, ls='--')  # Vertical line at start
+    plt.xlim(-2, 60)  # Adjust x-axis limits to show the starting point and end point
+    plt.ylim(2, 10)  # Adjust vertical limits
+    plt.grid()
+    plt.legend()
+    
+    # Display the plot in Streamlit
+    st.pyplot(plt)
