@@ -1,151 +1,106 @@
 import streamlit as st
-import pandas as pd
-import math
-from pathlib import Path
+import numpy as np
 
-# Set the title and favicon that appear in the Browser's tab bar.
-st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
-)
+# Function to calculate Swing Length
+def calc_swing_length(time_to_contact, bat_speed):
+    return (time_to_contact / 1.3636) * bat_speed
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
+# Function to calculate Swing Acceleration
+def calc_swing_acceleration(bat_speed, swing_length):
+    return 0.03343 * (bat_speed ** 2 / swing_length)
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
+# Function to calculate Swing Score
+def calc_swing_score(swing_acceleration, min_swing_acc=15, max_swing_acc=30):
+    score = 20 + ((swing_acceleration - min_swing_acc) / (max_swing_acc - min_swing_acc)) * 60
+    return max(min(score, 80), 20)  # Ensure score is within the 20-80 range
 
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
+# Function to calculate Euclidean distance
+def euclidean_distance(x1, y1, z1, x2, y2, z2):
+    return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+# Function to assign color category based on input values and cluster centroids
+def assign_color_category(bat_speed, swing_acceleration, attack_angle):
+    clusters = {
+        "Orange": [73.3, 24.03, 8.84],
+        "Purple": [71.2, 24.66, 8.41],
+        "Red": [69.9, 22.21, 10.39],
+        "Grey": [69.3, 22.21, 14.47],
+        "Green": [65.9, 22.29, 8.47],
+        "Pink": [68.7, 20.48, 10.34],
+        "Brown": [68.9, 22.47, 6.33],
+        "Blue": [64.4, 20.4, 8.99]
+    }
 
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
+    distances = {color: euclidean_distance(bat_speed, swing_acceleration, attack_angle, *coords)
+                 for color, coords in clusters.items()}
+    return min(distances, key=distances.get)
 
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
-    )
+# Define descriptions and expected metrics for each category
+category_info = {
+    "Orange": {
+        "description": "Aaron Judge, Shohei Ohtani, Yordan Alvarez\n"
+                       "Very efficient to the ball and finds success in utilizing the high bat speed to hit pitches out in front for power. This group may be plagued by a high whiff rate.",
+        "metrics": "wOBA: .323, Whiff Pct: 25.9, Barrel Pct: 11.51, Batting Avg: .245, ISO: .185"
+    },
+    "Purple": {
+        "description": "Juan Soto, Bobby Witt Jr., Gunnar Henderson\n"
+                       "This group is the most efficient to the ball and is full of complete hitters that can hit for average and power. Hitters in this group who struggle likely are finding their efficiency by hitting balls too deep.",
+        "metrics": "wOBA: .318, Whiff Pct: 23.22, Barrel Pct: 9.37, Batting Avg: .245, ISO: .168"
+    },
+    "Red": {
+        "description": "Trea Turner, Jesse Winker, Patrick Wisdom\n"
+                       "This cluster consists of slightly longer than average swings that take longer than average from start to impact, but generally benefit from hitting the ball in front of the plate. These longer swings may result in too many whiffs.",
+        "metrics": "wOBA: .312, Whiff Pct: 24.65, Barrel Pct: 9.22, Batting Avg: .241, ISO: .172"
+    },
+    "Grey": {
+        "description": "Max Muncy, Christian Encarnacion-Strand, Brandon Lowe\n"
+                       "Relatively normal swings in the context of bat speed and swing length, but follow a very uppercut path. These swings find production through power, while hitting for a low average and whiffing often.",
+        "metrics": "wOBA: .300, Whiff Pct: 28.06, Barrel Pct: 10.16, Batting Avg: .216, ISO: .171"
+    },
+    "Green": {
+        "description": "Steven Kwan, Mookie Betts, Josh Smith\n"
+                       "This group consists of slow to average bat speeds but all very efficient swings. They find success in strong utilization of bat to ball skills and may struggle with too steep of an attack angle.",
+        "metrics": "wOBA: .298, Whiff Pct: 18.45, Barrel Pct: 4.81, Batting Avg: .242, ISO: .111"
+    },
+    "Pink": {
+        "description": "Jose Altuve, Cody Bellinger, Marcus Semien\n"
+                       "This group has high variance with its best hitters finding success by elevating the ball to the pull side, thanks to a point of contact well in front of the plate. The hitters who struggle in this group are due to their high swing length being a product of a truly long swing, not a point of contact that results in pulled fly balls.",
+        "metrics": "wOBA: .293, Whiff Pct: 24.27, Barrel Pct: 7.92, Batting Avg: .221, ISO: .150"
+    },
+    "Brown": {
+        "description": "Brenton Doyle, Yandy Diaz, Kevin Kiermaier\n"
+                       "Slightly slower swings with a very flat attack angle. If these swings are successful it’s likely because of a strong contact-oriented approach. They don’t whiff much but may struggle to hit for power.",
+        "metrics": "wOBA: .284, Whiff Pct: 20.49, Barrel Pct: 5.10, Batting Avg: .235, ISO: .113"
+    },
+    "Blue": {
+        "description": "Charlie Blackmon, Cavan Biggio, Nicky Lopez\n"
+                       "This group generally struggles, with a low bat speed and not getting to that bat speed quickly. The hitters who find success are doing so through a contact-oriented approach with the margin for error being razor thin.",
+        "metrics": "wOBA: .273, Whiff Pct: 19.75, Barrel Pct: 3.43, Batting Avg: .222, ISO: .093"
+    }
+    # Add other categories here...
+}
 
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
+# Streamlit app code
+st.title('Swing Metrics Calculator')
 
-    return gdp_df
+# Input sliders
+bat_speed = st.slider('Bat Speed:', 50.0, 90.0, 65.0)
+attack_angle = st.slider('Attack Angle:', -5.0, 25.0, 0.0)
+time_to_contact = st.slider('Time to Contact:', 0.1, 0.2, 0.15)
 
-gdp_df = get_gdp_data()
+# Calculate swing length, acceleration, score, and color category
+swing_length = calc_swing_length(time_to_contact, bat_speed)
+swing_acceleration = calc_swing_acceleration(bat_speed, swing_length)
+swing_score = calc_swing_score(swing_acceleration)
+color_category = assign_color_category(bat_speed, swing_acceleration, attack_angle)
 
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
-)
-
-''
-''
-
-
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
-
-st.header(f'GDP in {to_year}', divider='gray')
-
-''
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
+# Display the results
+st.write(f"Bat Speed: {bat_speed}")
+st.write(f"Attack Angle: {attack_angle}")
+st.write(f"Time to Contact: {time_to_contact}")
+st.write(f"Swing Length: {swing_length:.2f}")
+st.write(f"Swing Acceleration: {swing_acceleration:.2f}")
+st.write(f"Swing Score: {swing_score:.2f}")
+st.write(f"Color Category: {color_category}")
+st.write(f"Description: {category_info[color_category]['description']}")
+st.write(f"Expected Metrics: {category_info[color_category]['met
